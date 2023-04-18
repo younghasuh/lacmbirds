@@ -1,0 +1,14 @@
+name: lacm_birds
+title: lacm_birds
+username:
+account: nhm-birds
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 8844714
+bundleId: 7106706
+url: https://nhm-birds.shinyapps.io/lacm_birds/
+when: 1681855632.7845
+lastSyncTime: 1681855632.78451
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: app.R|Birds_Collection.csv|server2.R|specimens.R|ui2.R
