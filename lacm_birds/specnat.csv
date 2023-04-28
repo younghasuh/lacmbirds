@@ -1,0 +1,28 @@
+specnat,Description
+AC,alcohol-preserved body carcass
+AL,entire specimen preserved in alcohol
+AO,partial specimen preserved in alcohol
+BM,taxidermied body mount
+EG,egg
+FA,flat skin with entire body preserved in alcohol
+FB,flat skin and complete skeleton
+FS,flat skin only
+KB,study skin with body (trunk) skeleton
+MS,taxidermied body mount with body (trunk) skeleton
+PS,body (trunk) skeleton only
+SA,study skin with body (trunk) preserved in alcohol
+SB,study skin with miscellaneous bones
+SK,skull only
+SN,complete skeleton
+SNB,skeleton with spread wing and tail
+SNT,skeleton with tail feathers
+SNW,skeleton with spread wing
+SNF,skeleton with feathers
+SO,partial skeleton
+SS,study skin
+SW,study skin with spread wing
+WO,wings only
+FF,feathers only
+TO,tail feathers only
+WT,wings and tail feathers
+TI,tissue only
