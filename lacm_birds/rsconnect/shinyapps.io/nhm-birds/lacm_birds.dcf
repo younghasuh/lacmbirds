@@ -5,10 +5,10 @@ account: nhm-birds
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 8844714
-bundleId: 7145192
+bundleId: 7381600
 url: https://nhm-birds.shinyapps.io/lacm_birds/
-when: 1682629882.49083
-lastSyncTime: 1682629882.49084
+when: 1687556020.09351
+lastSyncTime: 1687556020.09352
 asMultiple: FALSE
 asStatic: FALSE
 ignoredFiles: app.R|Birds_Collection.csv|notes.R|specimens.R|specnat.csv|specnat.xlsx|states.csv

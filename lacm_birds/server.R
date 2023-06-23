@@ -67,6 +67,28 @@ shinyServer(function(input, output, session) {
       scale_fill_viridis_c(option = "D")  
   })
   
+  # reactive map by county 
+  # within California only  
+  spat_ca_cty <- reactive({
+    left_join(get_urbn_map(map = "counties", sf = TRUE) %>% 
+                filter(state_abbv == "CA"),
+              selected() %>% 
+                count(cty2),
+              by=c("county_name"="cty2")) 
+  })
+  
+  
+  # app format  
+  output$ca_cty <- renderPlot({
+    spat_ca_cty () %>% 
+      ggplot() +
+      geom_sf(spat_ca_cty(),
+              mapping = aes(fill = n),
+              color = "#ffffff", size = 0.25) +
+      labs(fill = "Specimen count") +
+      scale_fill_viridis_c(option = "D")  
+  })
+  
   
 })
   
