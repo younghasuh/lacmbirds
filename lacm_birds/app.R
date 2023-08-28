@@ -2,17 +2,23 @@ library(shiny)
 library(ggplot2)
 library(tidyverse)
 library(urbnmapr)
+library(here)
 
-setwd("~/birds/lacm_birds")
+#setwd("~/lacmbirds/lacm_birds")
+here::i_am("app.R")
 
 ##########
 # Run this step for every new download from EMu
-data <- read.csv("C:/Users/ysuh/Documents/lacmbirds/lacm_birds/Birds_Collection.csv")
-specnat <- read.csv("C:/Users/ysuh/Documents/lacmbirds/lacm_birds/specnat.csv")
-sta <- read.csv("C:/Users/ysuh/Documents/lacmbirds/lacm_birds/states.csv")
+#data <- read.csv("C:/Users/ysuh/Documents/lacmbirds/lacm_birds/Birds_Collection.csv")
+
+data <- read.csv(here("Birds_Collection.csv"))
+specnat <- read.csv(here("specnat.csv"))
+sta <- read.csv(here("states.csv"))
+
 
 data2 <- data %>% 
-  select(Catalog.No, Field.No, Sex, LAF.No, Age, Spec.Nat, Measurements, Gonads, Weight, Collector, Date.Coll, Family, Genus, Species, Subspecies, Continent, Country, State, County, Township, Nearest.Named.Place) %>% 
+  select(Catalog.No, Field.No, Sex, LAF.No, Age, Spec.Nat, Measurements, Gonads, Weight, Collector, Date.Coll, Family, Genus, Species, Subspecies, Continent, Country, State, County, Township, Nearest.Named.Place,
+         Elevation, Latitude.Dec, Longitude.Dec) %>% 
   mutate(lacm = Catalog.No,
          field = Field.No,
          sex = Sex,
@@ -30,9 +36,12 @@ data2 <- data %>%
          family = Family,
          locality = paste(Country, State, County, Township, Nearest.Named.Place, sep = " "),
          state = State,
-         county = County
+         county = County,
+         ele = Elevation,
+         lat = Latitude.Dec,
+         lng = Longitude.Dec
   ) %>% 
-  select(lacm, field, sex, laf, age, specnat, measure, gonads, wt, coll, datecoll, family, species, genus, spp, locality, state, county)
+  select(lacm, field, sex, laf, age, specnat, measure, gonads, wt, coll, datecoll, family, species, genus, spp, locality, state, county, ele, lat, lng)
 
 
 
@@ -61,7 +70,7 @@ data5$cty2 <- gsub(" Co", " County", data5$cty)
 # I used to merge State with County since there are duplicate counties
 # But since I'm only doing CA, I can skip that step. Different issue if doing whole country. 
 
-write.csv(data5, "C:/Users/ysuh/Documents/lacmbirds/lacm_birds/data.csv", row.names=TRUE)
+write.csv(data5, here("data.csv"), row.names=TRUE)
 
 ##########
 

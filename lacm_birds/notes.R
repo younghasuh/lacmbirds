@@ -60,6 +60,8 @@ table(example$skeleton)
 table(example$skin)
 
 
+states <- get_urbn_map("states", sf = TRUE)
+
 spat_state1 <- state %>% 
   left_join(get_urbn_map(map = "states", sf = TRUE),
             selected() %>% 
@@ -77,3 +79,53 @@ spat_state1 <- state %>%
 # Within LA County -> plot points / plot by cities / plot major 5 counties surrounding LA
 # Plot georeferences points ->note those that don't have georeference
 # table of total number of specimen types/sex/other fields..  
+
+
+
+############
+test <- data5
+
+sp <- "Buteo jamaicensis"
+sp <- "Aphelocoma californica"
+ex <- test %>% filter(species == sp) #n=175 
+
+# compare with original data set
+# date filter is stringent 
+ex_origin <- data %>% filter(Genus == "Buteo" & Species == "jamaicensis") #n=217; about 20 w/o dates 
+
+
+library(sf)
+
+# remove rows where lat field is NA
+ex1 <- ex[!is.na(ex$lat),]
+
+# my_sf <- ex1 %>% 
+#   st_as_sf(coords = c('lng', 'lat')) %>%
+#   st_set_crs(4326)
+
+# usa <- st_as_sf(maps::map("state", fill=TRUE, plot =FALSE))
+# 
+# ggplot() + 
+#   geom_sf(data = my_sf, aes(), size = 1) + 
+#   geom_sf(data = usa, fill = NA)
+
+###
+# use 
+library(usmap)
+transformed_data <- usmap_transform(ex1, input_names = c("lng", "lat"))
+
+plot_usmap("states") + 
+  geom_point(data = transformed_data, 
+             aes(x = x, y = y), 
+             color = "red",
+             size = 3) # not sure if points are in alaska or mexico
+
+
+# try 
+
+###
+# for interactive map 
+library(leaflet)
+leaflet(states) %>%
+  addTiles() %>%
+  addPolygons()
