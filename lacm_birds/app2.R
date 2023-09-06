@@ -5,7 +5,8 @@ library(urbnmapr)
 library(here)
 library(usmap)
 
-#setwd("~/lacmbirds/lacm_birds")
+#
+setwd("~/lacmbirds/lacm_birds")
 here::i_am("app2.R")
 
 ##########
@@ -89,18 +90,13 @@ ui <- fluidPage(
       tabPanel(
         titlePanel("Species summary"),
         textInput("sp", "Species"),
-        fluidRow(
-          column(12, tableOutput("specnat"))),
+        fluidRow(column(12, tableOutput("specnat"))),
         
-        fluidRow(
-          column(12, plotOutput("trend"))),
+        fluidRow(column(12, plotOutput("trend"))),
         
-        fluidRow(
-          column(12, plotOutput("state"))),
+        fluidRow(column(12, plotOutput("state"))),
         
-        fluidRow(
-          column(12, plotOutput("ca_cty"))),
-        
+        fluidRow(column(12, plotOutput("ca_cty"))),
         
         fluidRow(
           column(2, tableOutput("countbyyear")),
@@ -112,14 +108,20 @@ ui <- fluidPage(
         textInput("catalog", "LACM"),
         fluidRow(column(12, tableOutput("catcount")),
                  
-        fluidRow(column(12, plotOutput("specmap"))),
+        fluidRow(column(12, plotOutput("specmap"))))
+        ),
       
       tabPanel(
-        titlePanel("Specimen type")
+        titlePanel("Specimen type"),
+        textInput("spc", "Species"),
+        fluidRow(column(3,  radioButtons("spectype", h3("Specimen type:"),
+                                         choices = list("Study skins" = "ss", "Skeleton" = "sk",
+                                                        "All" = "all"), selected = "ss")),
+                 column(12, tableOutput("speclist")))
       )
     )
   )
-)))
+)
 
 server <- function(input, output, session) {
   
@@ -199,7 +201,7 @@ server <- function(input, output, session) {
   
   
   ##### Tab 2
-  selected2 <- reactive(data5 %>% filter(lacm == input$catalog))
+  selected2 <- reactive(data5 %>% filter(lacm == input$catalog)) 
   
   output$catcount <- renderTable(
     selected2() %>% 
@@ -216,24 +218,40 @@ server <- function(input, output, session) {
       select(LACM, LAF, Family, Species, Subspecies, Sex, Date, Description, Locality)
   )
   
-  #transformed_data <- usmap_transform(ex1, input_names = c("lng", "lat"))
   
-  #plot_usmap("states") + 
-  #  geom_point(data = transformed_data, 
-  #             aes(x = x, y = y), 
-  #             color = "red",
-  #             size = 3)
+  # sel <- data5 %>% filter(lacm == 12223)
+  # transformed_data <- usmap_transform(sel, input_names = c("lng", "lat"))
+  # plot_usmap("states") + 
+  #   geom_point(data = transformed_data, 
+  #              aes(x = x, y = y), 
+  #              color = "red",
+  #              size = 3)
   
+   
   mapdat <- reactive({
-    usmap_transform(na.omit(selected2()), input_names = c("lng", "lat"))
-  }) # cannot derive nonnumeric; need to remove NA for lat/long 
+     usmap_transform(selected2(), input_names = c("lng", "lat"))
+   }) # cannot derive nonnumeric; need to remove NA for lat/long 
+   
+   output$specmap <- renderPlot({
+     plot_usmap("states") +
+       geom_point(data = mapdat(),
+                  aes(x=x, y=y), color="red", size=3)
+   })
+   
+   
+   #############
+   # tab 3
+   
+   selected3 <- reactive(data5 %>% filter(species == input$sp))
   
-  output$specmap <- renderPlot({
-    plot_usmap("states") +
-      geom_point(data = mapdat(),
-                 aes(x=x, y=y))
-      
-  })
+   #input$spectype == ss, sk, all
+   
+   output$speclist <- renderTable(
+     selected3() %>% 
+       filter(species == input$spc,
+              specnat == ifelse(input$spectype == "ss", "SS"))
+   )
+  
 }
 
 # Run the application 
