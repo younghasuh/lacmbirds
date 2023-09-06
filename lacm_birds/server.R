@@ -4,6 +4,8 @@ library(shiny)
 library(ggplot2)
 library(tidyverse)
 library(urbnmapr)
+library(here)
+library(usmap)
 
 data <- read.csv("data.csv")
 
@@ -88,6 +90,50 @@ shinyServer(function(input, output, session) {
       labs(fill = "Specimen count") +
       scale_fill_viridis_c(option = "D")  
   })
+  
+  ##### Tab 2
+  selected2 <- reactive(data %>% filter(lacm == input$catalog)) 
+  
+  output$catcount <- renderTable(
+    selected2() %>% 
+      mutate(
+        LACM = lacm,
+        LAF = laf,
+        Family = family,
+        Species = species,
+        Subspecies = spp,
+        Sex = sex,
+        Date = datecoll,
+        Locality = locality
+      ) %>% 
+      select(LACM, LAF, Family, Species, Subspecies, Sex, Date, Description, Locality)
+  )
+  
+  
+  
+  mapdat <- reactive({
+    usmap_transform(selected2(), input_names = c("lng", "lat"))
+  }) # cannot derive nonnumeric; need to remove NA for lat/long 
+  
+  output$specmap <- renderPlot({
+    plot_usmap("states") +
+      geom_point(data = mapdat(),
+                 aes(x=x, y=y), color="red", size=3)
+  })
+  
+  
+  #############
+  # tab 3
+  
+  selected3 <- reactive(data %>% filter(species == input$sp))
+  
+  #input$spectype == ss, sk, all
+  
+  output$speclist <- renderTable(
+    selected3() %>% 
+      filter(species == input$spc,
+             specnat == ifelse(input$spectype == "ss", "SS"))
+  )
   
   
 })
