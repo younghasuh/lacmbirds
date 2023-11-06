@@ -14,10 +14,41 @@ here::i_am("app2.R")
 #data <- read.csv("C:/Users/ysuh/Documents/lacmbirds/lacm_birds/Birds_Collection.csv")
 
 data <- read.csv(here("Birds_Collection.csv"))
+data1 <- read.csv(here("birds_2023.csv"))
+
 specnat <- read.csv(here("specnat.csv"))
 sta <- read.csv(here("states.csv"))
 
+# new data flat file from Oct 2023
+data2 <- data1 %>% 
+  select(Catalog.No, Field.No, Sex, LAF.No, Age, Spec.Nat, Measurements, Gonads, Weight, Collector, Date.Coll, Family, Genus, Species, Subspecies, Continent, Country, State, County, Township, Nearest.Named.Place,
+         Elevation, Latitude.Dec, Longitude.Dec) %>% 
+  mutate(lacm = Catalog.No,
+         field = Field.No,
+         sex = Sex,
+         laf = LAF.No,
+         age = Age, 
+         specnat = Spec.Nat,
+         measure = Measurements,
+         gonads = Gonads,
+         wt = as.numeric(Weight),
+         coll = Collector,
+         datecoll = Date.Coll,
+         species = paste(Genus, Species, sep = " "),
+         spp = Subspecies,
+         genus = Genus,
+         family = Family,
+         locality = paste(Country, State, County, Township, Nearest.Named.Place, sep = " "),
+         state = State,
+         county = County,
+         ele = Elevation,
+         lat = Latitude.Dec,
+         lng = Longitude.Dec
+  ) %>% 
+  select(lacm, field, sex, laf, age, specnat, measure, gonads, wt, coll, datecoll, family, species, genus, spp, locality, state, county, ele, lat, lng)
 
+
+# old 
 data2 <- data %>% 
   select(Catalog.No, Field.No, Sex, LAF.No, Age, Spec.Nat, Measurements, Gonads, Weight, Collector, Date.Coll, Family, Genus, Species, Subspecies, Continent, Country, State, County, Township, Nearest.Named.Place,
          Elevation, Latitude.Dec, Longitude.Dec) %>% 
@@ -72,7 +103,7 @@ data5$cty2 <- gsub(" Co", " County", data5$cty)
 # I used to merge State with County since there are duplicate counties
 # But since I'm only doing CA, I can skip that step. Different issue if doing whole country. 
 
-write.csv(data5, here("data.csv"), row.names=TRUE)
+write.csv(data5, here("data_2023.csv"), row.names=TRUE)
 
 data5 <- read.csv("data.csv")
 
@@ -115,7 +146,7 @@ ui <- fluidPage(
         titlePanel("Specimen type"),
         textInput("spc", "Species"),
         fluidRow(column(3,  radioButtons("spectype", h3("Specimen type:"),
-                                         choices = list("Study skins" = "ss", "Skeleton" = "sk",
+                                         choices = c("Study skins" = "ss", "Skeleton" = "sk",
                                                         "All" = "all"), selected = "ss")),
                  column(12, tableOutput("speclist")))
       )

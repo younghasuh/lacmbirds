@@ -87,11 +87,12 @@ test <- data5
 
 sp <- "Buteo jamaicensis"
 sp <- "Aphelocoma californica"
-ex <- test %>% filter(species == sp) #n=175 
+ex <- test %>% filter(species == sp) #n=178
 
 # compare with original data set
 # date filter is stringent 
-ex_origin <- data %>% filter(Genus == "Buteo" & Species == "jamaicensis") #n=217; about 20 w/o dates 
+ex_origin <- data1 %>% 
+  dplyr::filter(Genus == "Buteo" & Species == "jamaicensis") #n=220; about 42 w/o dates 
 
 
 library(sf)
@@ -129,3 +130,18 @@ library(leaflet)
 leaflet(states) %>%
   addTiles() %>%
   addPolygons()
+
+
+###########
+# test out radio button
+test <- data6
+sp <- "Buteo jamaicensis"
+ex <- test %>% filter(species == sp)
+
+ex %>% filter(spectype_sp == "Round skin")
+
+           spectype_sp == ifelse(input$spectype == "ss", "Study skin",
+                                 ifelse(input$spectype == "sk", "Skeleton",
+                                        ifelse(input$spectype == "al", "Fluid",
+                                               ifelse(input$spectype == "all", ., NA)))))
+)

@@ -31,8 +31,7 @@ shinyUI(fluidPage(
         titlePanel("LACM"),
         textInput("catalog", "LACM"),
         fluidRow(column(12, tableOutput("catcount")),
-                 
-                 fluidRow(column(12, plotOutput("specmap"))))
+        fluidRow(column(12, plotOutput("specmap"))))
       ),
       
       # tab 3
