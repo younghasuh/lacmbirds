@@ -134,7 +134,7 @@ leaflet(states) %>%
 
 ###########
 # test out radio button
-test <- data6
+test <- data5
 sp <- "Buteo jamaicensis"
 ex <- test %>% filter(species == sp)
 
@@ -143,5 +143,84 @@ ex %>% filter(spectype_sp == "Round skin")
            spectype_sp == ifelse(input$spectype == "ss", "Study skin",
                                  ifelse(input$spectype == "sk", "Skeleton",
                                         ifelse(input$spectype == "al", "Fluid",
-                                               ifelse(input$spectype == "all", ., NA)))))
+                                               ifelse(input$spectype == "all", ., NA))))))
+
+
+
+##########
+library(ggiraph)
+library(tidyverse)
+library(sf)
+library(rnaturalearth)
+
+ca_nv_map <- rnaturalearth::ne_states(country = 'United States of America', returnclass = 'sf') %>%
+  filter(name %in% c("California", "Nevada"))
+
+
+gg <- ggplot(
+  data = ex,
+  mapping = aes(
+    x = lat, y = lng,
+    # here we add iteractive aesthetics
+    tooltip = lacm, data_id = lacm
+  )
+) +
+  geom_point_interactive(
+    size = 3, hover_nearest = TRUE
+  )
+
+# turn as girafe
+girafe(ggobj = gg)
+
+
+
+
+
+
+
+
+###### EXAMPLE #######
+# add interactive maps to a ggplot -------
+library(ggplot2)
+library(ggiraph)
+
+crimes <- data.frame(state = tolower(rownames(USArrests)), USArrests)
+
+# create tooltips and onclick events
+states_ <- sprintf("<p>%s</p>",
+                   as.character(crimes$state) )
+table_ <- paste0(
+  "<table><tr><td>UrbanPop</td>",
+  sprintf("<td>%.0f</td>", crimes$UrbanPop),
+  "</tr><tr>",
+  "<td>Assault</td>",
+  sprintf("<td>%.0f</td>", crimes$Assault),
+  "</tr></table>"
 )
+
+onclick <- sprintf(
+  "window.open(\"%s%s\")",
+  "http://en.wikipedia.org/wiki/",
+  as.character(crimes$state)
+)
+
+
+crimes$labs <- paste0(states_, table_)
+crimes$onclick = onclick
+
+if (require("maps") ) {
+  states_map <- map_data("state")
+  gg_map <- ggplot(crimes, aes(map_id = state))
+  gg_map <- gg_map + geom_map_interactive(aes(
+    fill = Murder,
+    tooltip = labs,
+    data_id = state,
+    onclick = onclick
+  ),
+  map = states_map) +
+    expand_limits(x = states_map$long, y = states_map$lat)
+  x <- girafe(ggobj = gg_map)
+  if( interactive() ) print(x)
+}
+
+

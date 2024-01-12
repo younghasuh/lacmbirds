@@ -4,6 +4,9 @@ library(tidyverse)
 library(urbnmapr)
 library(here)
 
+#install.packages("devtools")
+#devtools::install_github("UrbanInstitute/urbnmapr")
+
 #setwd("~/lacmbirds/lacm_birds")
 here::i_am("app.R")
 
@@ -70,7 +73,7 @@ data5$cty2 <- gsub(" Co", " County", data5$cty)
 # I used to merge State with County since there are duplicate counties
 # But since I'm only doing CA, I can skip that step. Different issue if doing whole country. 
 
-write.csv(data5, here("data.csv"), row.names=TRUE)
+#write.csv(data5, here("data.csv"), row.names=TRUE)
 
 ##########
 

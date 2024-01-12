@@ -6,8 +6,6 @@ library(tidyverse)
 library(urbnmapr)
 library(here)
 library(usmap)
-library(leaflet)
-library(sf)
 
 data <- read.csv("data_2023.csv")
 autocomplist <- data$species
@@ -109,19 +107,6 @@ shinyServer(function(input, output, session) {
       scale_fill_viridis_c(option = "D")  
   })
   
-  # leaflet map
-  map_df <- reactive({
-    selected() %>% 
-      filter(!is.na(lng) & !is.na(lat)) %>% 
-      st_as_sf(coords = c("lng", "lat"))
-  })
-  
-  output$map = renderLeaflet({
-    leaflet() %>%
-      addTiles() %>%
-      addCircleMarkers(data = map_df(), radius=1) 
-  })  
-    
   ##### Tab 2
   selected2 <- reactive(data %>% filter(lacm == input$catalog)) 
   

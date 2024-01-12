@@ -6,17 +6,10 @@ library(tidyverse)
 library(urbnmapr)
 library(here)
 library(usmap)
-library(leaflet)
-library(sf)
 
 data <- read.csv("data_2023.csv")
-autocomplist <- data$species
-specnat <- read.csv(here("specnat.csv"))
-sta <- read.csv(here("states.csv"))
 
 shinyServer(function(input, output, session) {
-  
-  updateSelectizeInput(session, "sp", choices = autocomplist, selected=character(0), server = TRUE)
   
   selected <- reactive(data %>% filter(species == input$sp))
   
@@ -109,19 +102,6 @@ shinyServer(function(input, output, session) {
       scale_fill_viridis_c(option = "D")  
   })
   
-  # leaflet map
-  map_df <- reactive({
-    selected() %>% 
-      filter(!is.na(lng) & !is.na(lat)) %>% 
-      st_as_sf(coords = c("lng", "lat"))
-  })
-  
-  output$map = renderLeaflet({
-    leaflet() %>%
-      addTiles() %>%
-      addCircleMarkers(data = map_df(), radius=1) 
-  })  
-    
   ##### Tab 2
   selected2 <- reactive(data %>% filter(lacm == input$catalog)) 
   
@@ -142,15 +122,15 @@ shinyServer(function(input, output, session) {
   
   
   
-  mapdat <- reactive({
-    usmap_transform(selected2(), input_names = c("lng", "lat"))
-  }) # cannot derive nonnumeric; need to remove NA for lat/long 
-
-  output$specmap <- renderPlot({
-    plot_usmap("states") +
-      geom_point(data = mapdat(),
-                 aes(x=x, y=y), color="red", size=3)
-  })
+#  mapdat <- reactive({
+#    usmap_transform(selected2(), input_names = c("lng", "lat"))
+#  }) # cannot derive nonnumeric; need to remove NA for lat/long 
+  
+#  output$specmap <- renderPlot({
+#    plot_usmap("states") +
+#      geom_point(data = mapdat(),
+#                 aes(x=x, y=y), color="red", size=3)
+#  })
   
   
   #############

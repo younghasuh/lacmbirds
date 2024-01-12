@@ -2,8 +2,9 @@ library(shiny)
 library(ggplot2)
 library(tidyverse)
 library(urbnmapr)
-library(here)
 library(usmap)
+library(here)
+library(leaflet)
 
 #
 setwd("~/lacmbirds/lacm_birds")
@@ -103,7 +104,7 @@ data5$cty2 <- gsub(" Co", " County", data5$cty)
 # I used to merge State with County since there are duplicate counties
 # But since I'm only doing CA, I can skip that step. Different issue if doing whole country. 
 
-write.csv(data5, here("data_2023.csv"), row.names=TRUE)
+#write.csv(data5, here("data_2023.csv"), row.names=TRUE)
 
 data5 <- read.csv("data.csv")
 
@@ -125,6 +126,9 @@ ui <- fluidPage(
         
         fluidRow(column(12, plotOutput("trend"))),
         
+        fluidRow(column(12, plotOutput("trend2"))),
+        
+        
         fluidRow(column(12, plotOutput("state"))),
         
         fluidRow(column(12, plotOutput("ca_cty"))),
@@ -134,9 +138,14 @@ ui <- fluidPage(
           column(3, tableOutput("summary")))
       ),
       
+            
       tabPanel(
         titlePanel("LACM"),
         textInput("catalog", "LACM"),
+        fluidRow(
+          column(6,
+                 p("Map only works for USA")
+          ) ),
         fluidRow(column(12, tableOutput("catcount")),
                  
         fluidRow(column(12, plotOutput("specmap"))))
@@ -162,6 +171,7 @@ server <- function(input, output, session) {
     selected() %>% count(year)
   )
   
+  
   output$summary <- renderTable(
     selected() %>% count(year, specnat)
   )
@@ -182,11 +192,20 @@ server <- function(input, output, session) {
       scale_x_continuous(breaks = seq(1880, 2020, 10)) +
       xlim(1850, 2023) +
       theme_classic() +
-      labs(fill = "Specimen type", color = "Specimen type", x = "Year", y = "Count")
+      labs(fill = "Specimen type", color = "Specimen type", x = "Year", y = "Count", title = "Specimen count by year")
     
   }, res = 96)
   
-  
+  # count by month and type
+  output$trend2 <- renderPlot({
+    trend1() %>% 
+      ggplot(aes(x = month, fill = specnat, color = specnat)) +
+      geom_bar(position = position_dodge(preserve = "single")) +
+     scale_x_continuous(breaks = seq(1, 12, 1), labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")) +
+      theme_classic() +
+      labs(fill = "Specimen type", color = "Specimen type", x = "Month", y = "Count", title = "Specimen count by month")
+    
+  }, res = 96)
   
   # reactive map by state
   spat_state1 <- reactive({
@@ -203,7 +222,7 @@ server <- function(input, output, session) {
       geom_sf(spat_state1(),
               mapping = aes(fill = n),
               color = "#ffffff", size = 0.25) +
-      labs(fill = "Specimen count") +
+      labs(fill = "Specimen count", title = "Specimen count by State") +
       scale_fill_viridis_c(option = "D")  
   })
   
@@ -226,7 +245,7 @@ server <- function(input, output, session) {
       geom_sf(spat_ca_cty(),
               mapping = aes(fill = n),
               color = "#ffffff", size = 0.25) +
-      labs(fill = "Specimen count") +
+      labs(fill = "Specimen count", title = "Specimen count by County") +
       scale_fill_viridis_c(option = "D")  
   })
   
@@ -250,13 +269,15 @@ server <- function(input, output, session) {
   )
   
   
-  # sel <- data5 %>% filter(lacm == 12223)
-  # transformed_data <- usmap_transform(sel, input_names = c("lng", "lat"))
-  # plot_usmap("states") + 
-  #   geom_point(data = transformed_data, 
-  #              aes(x = x, y = y), 
-  #              color = "red",
-  #              size = 3)
+   # test code here
+  
+   #sel <- data5 %>% filter(lacm == 12223)
+   #transformed_data <- usmap_transform(sel, input_names = c("lng", "lat"))
+   #plot_usmap("states") + 
+   # geom_point(data = transformed_data, 
+   #             aes(x = x, y = y), 
+   #            color = "red",
+   #            size = 3)
   
    
   mapdat <- reactive({
@@ -268,6 +289,8 @@ server <- function(input, output, session) {
        geom_point(data = mapdat(),
                   aes(x=x, y=y), color="red", size=3)
    })
+   
+   
    
    
    #############

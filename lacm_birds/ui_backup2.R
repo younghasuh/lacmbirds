@@ -1,7 +1,6 @@
 # ui.R
 
 library(shiny)
-library(leaflet)
 
 
 shinyUI(fluidPage(
@@ -33,10 +32,8 @@ shinyUI(fluidPage(
         fluidRow(column(12, h4("Specimen count by state (US only)"), plotOutput("state"))),
         
         fluidRow(column(12, h4("Specimen count by county (CA only)"), plotOutput("ca_cty"))),
-        
-        fluidRow(column(12, h4("Global specimen distribution"), leafletOutput(outputId = 'map'))),
-        
-        fluidRow(
+
+        fluidRow( 
           column(2, tableOutput("countbyyear")),
           column(3, tableOutput("summary")))
       ),
