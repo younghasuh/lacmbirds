@@ -8,24 +8,32 @@ shinyUI(fluidPage(
   tags$head(
     tags$style(HTML('* {font-family: "Arial"};'))),
   
-  titlePanel("LACM Specimen trends and map"),
+  titlePanel("LACM Specimen trends and maps"),
   
   mainPanel(
     tabsetPanel(
       type = "tabs",
+      
+      # tab 1
       tabPanel(
         titlePanel("Species summary"),
         
-        selectizeInput(
-          inputId = 'sp',
-          label = 'Species',
-          choices = NULL,
-          selected = NULL,
-          multiple = FALSE, # allow for multiple inputs
-          options = NULL),
+        sidebarLayout(
+          sidebarPanel(
+            
+          selectizeInput(
+           inputId = 'sp',
+            label = 'Species',
+            choices = NULL,
+            selected = NULL,
+            multiple = FALSE, # allow for multiple inputs
+            options = NULL),
         
-        fluidRow(column(12, h4("Specimen count by specimen type/nature"), tableOutput("specnat"))),
+        fluidRow(column(12, h4("Specimen count by specimen type/nature"), tableOutput("specnat")))
+        ),
         
+      mainPanel(
+               
         fluidRow(column(12, h4("Specimen count by year"), plotOutput("trend"))),
         
         fluidRow(column(12, h4("Specimen count by month"), plotOutput("trend2"))),
@@ -39,17 +47,18 @@ shinyUI(fluidPage(
         fluidRow(
           column(2, tableOutput("countbyyear")),
           column(3, tableOutput("summary")))
-      ),
+       )
+      )),
       
       # tab 2
       tabPanel(
-        titlePanel("LACM"),
+        titlePanel("LACM lookup"),
         textInput("catalog", "LACM"),
-        fluidRow(column(12, tableOutput("catcount")),
-        fluidRow(column(12, plotOutput("specmap"))))
-      )
+        fluidRow(column(12, tableOutput("catcount"))),
+        fluidRow(column(12, h4("Leaftlet map"), leafletOutput(outputId = 'catmap')))
     )
   )))
+)
       
       # tab 3
       #tabPanel(

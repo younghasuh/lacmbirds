@@ -27,10 +27,16 @@ ui <- fluidPage(tags$head(tags$style(HTML('* {font-family: "Arial"};'))),
   mainPanel(
     tabsetPanel(
       type = "tabs",
+      # tab 1
       tabPanel(
         titlePanel("Species summary"),
+        
+        sidebarLayout(
+          sidebarPanel(
         textInput("sp", "Species"),
-        fluidRow(column(12, h4("Specimen count by specimen type/nature"), tableOutput("specnat"))),
+        fluidRow(column(12, h4("Specimen count by specimen type/nature"), tableOutput("specnat")))),
+        
+        mainPanel(
         
         fluidRow(column(12, h4("Specimen count by year"), plotOutput("trend"))),
         
@@ -42,22 +48,22 @@ ui <- fluidPage(tags$head(tags$style(HTML('* {font-family: "Arial"};'))),
         
         fluidRow(column(12, h4("Global specimen distribution"), leafletOutput(outputId = 'map')))
         
-       
+        ))
       ),
       
-            
+      # tab 2      
       tabPanel(
-        titlePanel("LACM"),
+        titlePanel("LACM lookup"),
         textInput("catalog", "LACM"),
-        fluidRow(
-          column(6,
-                 p("Map only works for USA")
-          ) ),
-        fluidRow(column(12, tableOutput("catcount")),
+        fluidRow(column(12, tableOutput("catsum"))),
                  
-        fluidRow(column(12, plotOutput("specmap"))))
+#        fluidRow(column(12, plotOutput("specmap"))),
+                 
+        fluidRow(column(12, h4("Leaftlet map"), leafletOutput(outputId = 'catmap')))
         ),
       
+      
+      # tab 3
       tabPanel(
         titlePanel("Specimen type"),
         textInput("spc", "Species"),
@@ -159,7 +165,7 @@ server <- function(input, output, session) {
   
   #selected <- reactive(data5 %>% filter(species == input$sp))
   map_df <- reactive({
-    data5 %>% filter(species == input$sp) %>% 
+   selected() %>% 
       filter(!is.na(lng) & !is.na(lat)) %>% 
       st_as_sf(coords = c("lng", "lat"))
   })
@@ -168,8 +174,56 @@ server <- function(input, output, session) {
     leaflet() %>%
       addTiles() %>%
       addCircleMarkers(data = map_df(), radius=1) 
+  
+      
+  })
+  
+  
+  ##### Tab 2
+  selected2 <- reactive(data5 %>% filter(lacm == input$catalog)) 
+  
+  output$catsum <- renderTable(
+    selected2() %>% 
+      mutate(
+        LACM = lacm,
+        LAF = laf,
+        Family = family,
+        Species = species,
+        Subspecies = spp,
+        Sex = sex,
+        Date = datecoll,
+        Locality = locality
+      ) %>% 
+      select(LACM, LAF, Family, Species, Subspecies, Sex, Date, Description, Locality)
+  )
+  
+  
+ # mapdat <- reactive({
+#    usmap_transform(selected2(), input_names = c("lng", "lat"))
+#  }) # cannot derive nonnumeric; need to remove NA for lat/long 
+  
+#  output$specmap <- renderPlot({
+#    plot_usmap("states") +
+#      geom_point(data = mapdat(),
+#                 aes(x=x, y=y), color="red", size=3)
+#  })
+  
+  # using leaflet instead
+  catmap_df <- reactive({
+    selected2() %>% 
+      filter(!is.na(lng) & !is.na(lat)) %>% 
+      st_as_sf(coords = c("lng", "lat"))
+  })
+  
+  output$catmap = renderLeaflet({
+    leaflet() %>%
+      addTiles() %>%
+      addCircleMarkers(data = catmap_df(), radius=1)
     
   })
+  
+  
+  
 }
 
 # Run the application 

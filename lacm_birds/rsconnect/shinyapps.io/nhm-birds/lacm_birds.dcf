@@ -5,7 +5,7 @@ account: nhm-birds
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 8844714
-bundleId: 8135558
+bundleId: 8159605
 url: https://nhm-birds.shinyapps.io/lacm_birds/
 asMultiple: FALSE
 asStatic: FALSE

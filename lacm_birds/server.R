@@ -44,7 +44,7 @@ shinyServer(function(input, output, session) {
       scale_x_continuous(breaks = seq(1880, 2020, 10)) +
       xlim(1850, 2023) +
       theme_classic() +
-      labs(fill = "Specimen type", color = "Specimen type", x = "Year", y = "Count", title = "Specimen count by year")
+      labs(fill = "Specimen type", color = "Specimen type", x = "Year", y = "Count")
     
   }, res = 96)
   
@@ -55,7 +55,7 @@ shinyServer(function(input, output, session) {
       geom_bar(position = position_dodge(preserve = "single")) +
       scale_x_continuous(breaks = seq(1, 12, 1), labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")) +
       theme_classic() +
-      labs(fill = "Specimen type", color = "Specimen type", x = "Month", y = "Count", title = "Specimen count by month")
+      labs(fill = "Specimen type", color = "Specimen type", x = "Month", y = "Count")
     
   }, res = 96)
   
@@ -83,7 +83,7 @@ shinyServer(function(input, output, session) {
       geom_sf(spat_state1(),
               mapping = aes(fill = n),
               color = "#ffffff", size = 0.25) +
-      labs(fill = "Specimen count", title = "Specimen count by State") +
+      labs(fill = "Specimen count") +
       scale_fill_viridis_c(option = "D")  
   })
   
@@ -105,7 +105,7 @@ shinyServer(function(input, output, session) {
       geom_sf(spat_ca_cty(),
               mapping = aes(fill = n),
               color = "#ffffff", size = 0.25) +
-      labs(fill = "Specimen count", title = "Specimen count by County") +
+      labs(fill = "Specimen count") +
       scale_fill_viridis_c(option = "D")  
   })
   
@@ -141,15 +141,19 @@ shinyServer(function(input, output, session) {
   )
   
   
-  
-  mapdat <- reactive({
-    usmap_transform(selected2(), input_names = c("lng", "lat"))
-  }) # cannot derive nonnumeric; need to remove NA for lat/long 
-
-  output$specmap <- renderPlot({
-    plot_usmap("states") +
-      geom_point(data = mapdat(),
-                 aes(x=x, y=y), color="red", size=3)
+    
+    # using leaflet instead
+  catmap_df <- reactive({
+      selected2() %>% 
+        filter(!is.na(lng) & !is.na(lat)) %>% 
+        st_as_sf(coords = c("lng", "lat"))
+    })
+    
+    output$catmap = renderLeaflet({
+      leaflet() %>%
+        addTiles() %>%
+        addCircleMarkers(data = catmap_df(), radius=1)
+      
   })
   
   
