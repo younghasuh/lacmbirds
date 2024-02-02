@@ -1,37 +1,42 @@
 # R packages
 library(shiny)
+library(tidyverse)
+library(here)
 library(leaflet)
 library(urbnmapr)
-library(here)
 library(usmap)
 library(leaflet)
 library(sf)
 
+setwd("~/lacmbirds/lacm_birds")
 here::i_am("collectionsdata.R")
 
 # load data
-data <- read.csv("data_2023.csv")
-autocomplist <- data$species
-specnat <- read.csv(here("specnat.csv"))
-sta <- read.csv(here("states.csv"))
+#data <- read.csv("data_2023.csv")
+#df <- data[sample(nrow(data), 1000),]
+#write.csv(df, "sampledata.csv")
+
+data <- read.csv("sampledata.csv") # randomly sampled 1000 specimens from original database
+
+autocomplist <- data$species # get a list of all the species in your collections database
+specnat <- read.csv(here("specnat.csv")) # read in list of specimen nature types matched with acronyms
+sta <- read.csv(here("states.csv")) # read in list of state names 
 
 
 #####
 # set up data
-inputdat <- data5
-
-data <- inputdat %>% 
-  select(lacm, sex, specnat, date, species, lat, lng) %>% 
+data <- data %>% 
+  select(lacm, laf, sex, specnat, date, species, spp, lat, lng, locality, state, county, abv, Description) %>% 
   mutate(
-    catalog = lacm,
+    catalog = lacm, #change LACM to universal catalog 
     date = as.Date(date),
     year = as.numeric(format(date, "%Y")),
-    month = as.numeric(format(date, "%m")))
-
+    month = as.numeric(format(date, "%m")),
+    description = Description)
 
 
 # transform date into an actual date category
-data$date <- as.Date(data$datecoll, format="%d %B %Y")
+data$date <- as.Date(data$date, format="%d %B %Y")
 
 data$year <- as.numeric(format(data$date, "%Y"))
 data$month <- as.numeric(format(data$date, "%m"))
@@ -40,9 +45,6 @@ data$month <- as.numeric(format(data$date, "%m"))
 #########
 # app starts here
 ui <- fluidPage(
-  tags$head(
-    tags$style(HTML('* {font-family: "Arial"};'))),
-  
   titlePanel("LACM Specimen trends and maps"),
   
   mainPanel(
@@ -110,7 +112,7 @@ server <- function(input, output, session) {
   )
   
   output$specnat <- renderTable(
-    selected() %>% count(Description)
+    selected() %>% count(description)
   )
   
   
@@ -189,7 +191,7 @@ server <- function(input, output, session) {
         Species = species,
         Subspecies = spp,
         Sex = sex,
-        Date = datecoll,
+        Date = date,
         Locality = locality
       ) %>% 
       select(LACM, LAF, Family, Species, Subspecies, Sex, Date, Description, Locality)
