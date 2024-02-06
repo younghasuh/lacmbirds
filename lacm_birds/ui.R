@@ -1,14 +1,13 @@
-# ui.R
-
 library(shiny)
 library(leaflet)
+library(ggiraph)
 
 
 shinyUI(fluidPage(
-  tags$head(
-    tags$style(HTML('* {font-family: "Arial"};'))),
   
-  titlePanel("LACM Specimen trends and maps"),
+  #titlePanel("LACM Specimen trends and maps"),
+  titlePanel(title =  div(img(src="NHM_logo_black_250.png", width="50px", height="50px"), 
+                          "LACM Specimen trends and maps"), windowTitle = "LACM Specimen trends and maps"),
   
   mainPanel(
     tabsetPanel(
@@ -20,7 +19,9 @@ shinyUI(fluidPage(
         
         sidebarLayout(
           sidebarPanel(
-            
+          h2("Species"),
+          p("Start typing species and select from drop-down list."),
+              
           selectizeInput(
            inputId = 'sp',
             label = 'Species',
@@ -28,6 +29,7 @@ shinyUI(fluidPage(
             selected = NULL,
             multiple = FALSE, # allow for multiple inputs
             options = NULL),
+  
         
         fluidRow(column(12, h4("Specimen count by specimen type/nature"), tableOutput("specnat")))
         ),
@@ -43,6 +45,14 @@ shinyUI(fluidPage(
         fluidRow(column(12, h4("Specimen count by county (CA only)"), plotOutput("ca_cty"))),
         
         fluidRow(column(12, h4("Global specimen distribution"), leafletOutput(outputId = 'map'))),
+        
+        fluidRow(column(12, h4("Weights by sex"), plotOutput(outputId = "wtPlot"))),
+        
+        #fluidRow(column(12, h4("Weights by sex - interactive"), girafeOutput("wtPlot2"))),
+        
+         fluidRow(column(8, h4("Weights by sex - interactive"), girafeOutput("wtPlot2")),
+                  column(4, h4("Hovering points"), verbatimTextOutput("console"),
+                         h4("Selected points"), tableOutput("datatab"))),
         
         fluidRow(
           column(2, tableOutput("countbyyear")),

@@ -8,6 +8,7 @@ library(here)
 library(usmap)
 library(leaflet)
 library(sf)
+library(ggiraph)
 
 data <- read.csv("data_2023.csv")
 autocomplist <- data$species
@@ -33,13 +34,14 @@ shinyServer(function(input, output, session) {
   )
   
   
-  trend1 <- reactive({
+  data_filt <- reactive({
     selected() %>% 
-      filter(specnat == "SS" | specnat == "SN" | specnat == "SW")
+      filter(nat == "skeleton" | nat == "study skin")
   })
+  
   output$trend <- renderPlot({
-    trend1() %>% 
-      ggplot(aes(x = year, fill = specnat, color = specnat)) +
+    data_filt() %>% 
+      ggplot(aes(x = year, fill = nat, color = nat)) +
       geom_bar(position = position_dodge(preserve = "single")) +
       scale_x_continuous(breaks = seq(1880, 2020, 10)) +
       xlim(1850, 2023) +
@@ -50,8 +52,8 @@ shinyServer(function(input, output, session) {
   
   # count by month and type
   output$trend2 <- renderPlot({
-    trend1() %>% 
-      ggplot(aes(x = month, fill = specnat, color = specnat)) +
+    data_filt() %>% 
+      ggplot(aes(x = month, fill = nat, color = nat)) +
       geom_bar(position = position_dodge(preserve = "single")) +
       scale_x_continuous(breaks = seq(1, 12, 1), labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")) +
       theme_classic() +
@@ -121,6 +123,51 @@ shinyServer(function(input, output, session) {
       addTiles() %>%
       addCircleMarkers(data = map_df(), radius=1) 
   })  
+  
+  # boxplot for weights
+  output$wtPlot <- renderPlot({
+    selected() %>% 
+      ggplot(aes(x=sex, y=wt)) +
+      stat_boxplot(geom="errorbar", position="dodge2") +
+      geom_boxplot(stat = "boxplot",
+                   position = "dodge2") + 
+      geom_point(shape=16, alpha=0.4, position=position_jitter(0.2)) +
+      theme_minimal() +
+      scale_x_discrete(limits = c("M", "F", "U"), labels = c("Male", "Female", "Unknown")) +
+      labs(x = "Sex", y = "Weight (g)")
+  })
+  
+  # with ggiraph for interactive plot 
+  selected_pts <- reactive({
+    input$wtPlot2_selected
+  })
+  
+  output$console <- renderPrint({
+    input$wtPlot2_hovered
+  })
+  
+  output$wtPlot2 <- renderGirafe({
+    gg_bx <- ggplot(selected(), aes(x=sex, y=wt)) +
+      stat_boxplot(geom="errorbar", position="dodge2") +
+      geom_boxplot(stat="boxplot", position="dodge2", outlier.shape = NA) +
+      geom_point_interactive(aes(tooltip=lacm, data_id=lacm),
+                             size=3, hover_nearest=T, position=position_jitter(0.2))  +
+      scale_x_discrete(limits = c("M", "F", "U"), labels = c("Male", "Female", "Unknown")) +
+      labs(x = "Sex", y = "Weight (g)")
+    girafe(ggobj = gg_bx)
+  })
+  
+  output$datatab <- renderTable({
+    #  selected_pts() 
+    out <- selected()[selected()$lacm %in% selected_pts(),] %>% 
+      mutate(LACM = lacm, LAF = laf, Sex = sex, subspecies = spp, Date = datecoll, Locality = locality, SpecType = nat) %>% 
+      select(LACM, LAF, Sex, subspecies, Date, Locality, SpecType) 
+    if( nrow(out) < 1 ) return(NULL)
+    row.names(out) <- NULL
+    out
+  })
+  
+  
     
   ##### Tab 2
   selected2 <- reactive(data %>% filter(lacm == input$catalog)) 
