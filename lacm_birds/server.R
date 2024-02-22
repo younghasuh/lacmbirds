@@ -1,5 +1,6 @@
 # server.R
 
+library(plotly)
 library(shiny)
 library(ggplot2)
 library(tidyverse)
@@ -9,31 +10,33 @@ library(usmap)
 library(leaflet)
 library(sf)
 library(ggiraph)
+library(htmltools)
+library(shinydashboard)
 
-data <- read.csv("data_2023.csv")
-autocomplist <- data$species
-specnat <- read.csv(here("specnat.csv"))
-sta <- read.csv(here("states.csv"))
+
+# Load data
+data <- read.csv("data_20240222.csv")
+alist <- sort(unique(unlist(data$species, use.names = FALSE)))
+ind <- c("sex", "spp", "state", "month")
+
 
 shinyServer(function(input, output, session) {
   
-  updateSelectizeInput(session, "sp", choices = autocomplist, selected=character(0), server = TRUE)
+  ### TAB 1
+  # using selectize input; putting autofill list on server side to reduce processing speed
+  updateSelectizeInput(session, "sp", choices = alist, selected=character(0), server = TRUE)
   
-  selected <- reactive(data %>% filter(species == input$sp))
+  # reactive input for species for tab 1
+  selected <- reactive(data %>% filter(species == req(input$sp)))
   
-  output$countbyyear <- renderTable(
-    selected() %>% count(year)
-  )
   
-  output$summary <- renderTable(
-    selected() %>% count(year, specnat)
-  )
-  
+  # table for specimen nature 
   output$specnat <- renderTable(
     selected() %>% count(Description)
   )
   
   
+  # filter only skeletons and study skins for simplified figures
   data_filt <- reactive({
     selected() %>% 
       filter(nat == "skeleton" | nat == "study skin")
@@ -62,23 +65,16 @@ shinyServer(function(input, output, session) {
   }, res = 96)
   
   
-  # output$spp <- renderPlot({
-  #   selected() %>% 
-  #     ggplot(aes(x = year, fill = spp, color = spp)) +
-  #     geom_histogram(breaks = seq(1880, 2020, by = 10), alpha = 0.5, position="dodge2") +
-  #     scale_x_continuous(breaks = seq(1880, 2020, 10)) +
-  #     theme_classic() +
-  #     labs(fill = "Subspecies", color = "Subspecies", x = "Year", y = "Count")
-  # }, res = 96)
   
+  # reactive map by state
+  # US only
   spat_state1 <- reactive({
     left_join(get_urbn_map(map = "states", sf = TRUE),
               selected() %>% 
                 count(abv),
               by = c("state_abbv" = "abv"))
   })
-
-  # app format  
+  
   output$state <- renderPlot({
     spat_state1() %>% 
       ggplot() +
@@ -100,7 +96,6 @@ shinyServer(function(input, output, session) {
   })
   
   
-  # app format  
   output$ca_cty <- renderPlot({
     spat_ca_cty () %>% 
       ggplot() +
@@ -111,7 +106,9 @@ shinyServer(function(input, output, session) {
       scale_fill_viridis_c(option = "D")  
   })
   
+  
   # leaflet map
+  # global
   map_df <- reactive({
     selected() %>% 
       filter(!is.na(lng) & !is.na(lat)) %>% 
@@ -121,9 +118,11 @@ shinyServer(function(input, output, session) {
   output$map = renderLeaflet({
     leaflet() %>%
       addTiles() %>%
-      addCircleMarkers(data = map_df(), radius=1) 
+      addCircleMarkers(data = map_df(), radius=1, 
+                       popup=paste("LACM ", map_df()$lacm, "<br>", map_df()$datecoll, sep = " ")) 
   })  
   
+  ## tab 2 
   # boxplot for weights
   output$wtPlot <- renderPlot({
     selected() %>% 
@@ -137,6 +136,7 @@ shinyServer(function(input, output, session) {
       labs(x = "Sex", y = "Weight (g)")
   })
   
+  ## tab 3
   # with ggiraph for interactive plot 
   selected_pts <- reactive({
     input$wtPlot2_selected
@@ -167,9 +167,21 @@ shinyServer(function(input, output, session) {
     out
   })
   
+  ## tab 4
+  # plotly boxplots - variable y
+   x <- reactive({
+     x <- selected()[[input$xaxis]]
+   })
+   output$plot <- renderPlotly({
+   dat <- selected()
+   plot_ly(dat, x = x(), y = dat$wt, type = "box")  %>%
+       layout(boxmode = "group",
+              xaxis = list(title='Grouping'),
+              yaxis = list(title='Weight (g)'))
+   })
   
-    
-  ##### Tab 2
+  
+  #### TAB 2
   selected2 <- reactive(data %>% filter(lacm == input$catalog)) 
   
   output$catcount <- renderTable(
@@ -188,35 +200,20 @@ shinyServer(function(input, output, session) {
   )
   
   
-    
-    # using leaflet instead
+  
+  # using leaflet
   catmap_df <- reactive({
-      selected2() %>% 
-        filter(!is.na(lng) & !is.na(lat)) %>% 
-        st_as_sf(coords = c("lng", "lat"))
-    })
-    
-    output$catmap = renderLeaflet({
-      leaflet() %>%
-        addTiles() %>%
-        addCircleMarkers(data = catmap_df(), radius=1)
-      
+    selected2() %>% 
+      filter(!is.na(lng) & !is.na(lat)) %>% 
+      st_as_sf(coords = c("lng", "lat"))
   })
   
-  
-  #############
-  # tab 3
-  
-  selected3 <- reactive(data %>% filter(species == input$sp))
-  
-  #input$spectype == ss, sk, all
-  
-  output$speclist <- renderTable(
-    selected3() %>% 
-      filter(species == input$spc,
-             specnat == ifelse(input$spectype == "ss", "SS"))
-  )
-  
+  output$catmap = renderLeaflet({
+    leaflet() %>%
+      addTiles() %>%
+      addCircleMarkers(data = catmap_df(), radius=1, 
+                       popup=paste("LACM ", catmap_df()$lacm, "<br>", catmap_df()$datecoll, sep = " "))
+    
+  })
   
 })
-  
