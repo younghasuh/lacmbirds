@@ -4,6 +4,7 @@ library(leaflet)
 library(ggiraph)
 library(htmltools)
 library(shinydashboard)
+library(tidyverse)
 
 
 shinyUI(
@@ -38,12 +39,13 @@ shinyUI(
             tabsetPanel(type = "tabs",
                         tabPanel(title = "Summary", h4("Specimen count by specimen type/nature"), tableOutput("specnat")),
                         
-                        tabPanel(title = "Count figures", 
+                        tabPanel(title = "Count data", 
                                  fluidRow(column(12, h4("Specimen count by year"), plotOutput("trend"))),
                                  fluidRow(column(12, h4("Specimen count by month"), plotOutput("trend2"))),
                                  fluidRow(column(12, h4("Specimen count by state (US only)"), plotOutput("state"))),
                                  fluidRow(column(12, h4("Specimen count by county (CA only)"), plotOutput("ca_cty"))),
-                                 fluidRow(column(12, h4("Global specimen distribution"), leafletOutput(outputId = 'map')))
+                                 fluidRow(column(12, h4("Global specimen distribution"), leafletOutput(outputId = 'map'))),
+                                 fluidRow(column(12, h4("List of all specimens"), tableOutput("summary")))
                         ),
                         
                         tabPanel(title = "Weights by sex",
@@ -57,7 +59,11 @@ shinyUI(
                                                  box(selectInput("xaxis", "Select independent variable (x-axis)",
                                                                  choices = c("sex", "spp", "state", "month"))),
                                                  box(plotlyOutput("plot"))))
-                        )
+                        ),
+                        
+                        tabPanel(title = "Table of all specimens",
+                                 fluidRow(column(12, h4("List of all specimens"),
+                                                 tableOutput("spectab"))))
             )
           ) # mainpanel end
         ) # sidebar layout end

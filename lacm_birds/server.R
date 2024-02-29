@@ -35,6 +35,21 @@ shinyServer(function(input, output, session) {
     selected() %>% count(Description)
   )
   
+  # table for list
+  output$spectab <- renderTable(
+    selected() %>% 
+      mutate(
+        LACM = lacm,
+        LAF = laf,
+        Family = family,
+        Species = species,
+        Subspecies = spp,
+        Sex = sex,
+        Date = datecoll,
+        Locality = locality
+      ) %>% 
+      select(LACM, LAF, Family, Species, Subspecies, Sex, Date, Description, Locality)
+  )
   
   # filter only skeletons and study skins for simplified figures
   data_filt <- reactive({
