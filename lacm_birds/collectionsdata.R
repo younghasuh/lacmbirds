@@ -11,10 +11,6 @@ library(sf)
 setwd("~/lacmbirds/lacm_birds")
 here::i_am("collectionsdata.R")
 
-# load data
-#data <- read.csv("data_2023.csv")
-#df <- data[sample(nrow(data), 1000),]
-#write.csv(df, "sampledata.csv")
 
 data <- read.csv("sampledata.csv") # randomly sampled 1000 specimens from original database
 
