@@ -5,6 +5,7 @@ library(ggiraph)
 library(htmltools)
 library(shinydashboard)
 library(tidyverse)
+library(DT)
 
 
 shinyUI(
@@ -55,15 +56,15 @@ shinyUI(
                         ),
                         
                         tabPanel(title = "Data explorationg with Plotly",
-                                 fluidRow(column(12, h4("Plotly boxplots"),
-                                                 box(selectInput("xaxis", "Select independent variable (x-axis)",
-                                                                 choices = c("sex", "spp", "state", "month"))),
-                                                 box(plotlyOutput("plot"))))
+                                 fluidRow(column(12, h4("Plotly boxplots"), 
+                                                 box(selectInput("xaxis", "Select variable (x-axis)",
+                                                                 choices = c("sex", "spp", "state", "month"))))),
+                                 fluidRow(column(12, plotlyOutput("plot")))
                         ),
                         
                         tabPanel(title = "Table of all specimens",
-                                 fluidRow(column(12, h4("List of all specimens"),
-                                                 tableOutput("spectab"))))
+                                 fluidRow(column(12, h4("List of all specimens. Use shift or ctrl to select multiple rows for copying onto clipboard."),
+                                                 DTOutput("spectab"))))
             )
           ) # mainpanel end
         ) # sidebar layout end

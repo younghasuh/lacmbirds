@@ -12,6 +12,7 @@ library(sf)
 library(ggiraph)
 library(htmltools)
 library(shinydashboard)
+library(DT)
 
 
 # Load data
@@ -36,8 +37,8 @@ shinyServer(function(input, output, session) {
   )
   
   # table for list
-  output$spectab <- renderTable(
-    selected() %>% 
+  output$spectab <- renderDT({
+    dat <- selected() %>% 
       mutate(
         LACM = lacm,
         LAF = laf,
@@ -49,7 +50,27 @@ shinyServer(function(input, output, session) {
         Locality = locality
       ) %>% 
       select(LACM, LAF, Family, Species, Subspecies, Sex, Date, Description, Locality)
-  )
+    
+    DT::datatable(dat,
+                  class = 'cell-border stripe',
+                  rownames = F,
+                  extensions = c("Buttons", "Select"),
+                  selection = 'none',
+                  options = 
+                    list(
+                      pageLength = 10, autoWidth = TRUE,
+                      dom = 'Bfrtip',
+                      select = TRUE,
+                      buttons = list(
+                        list(
+                          extend = "copy",
+                          text = 'Copy'#,
+                          #exportOptions = list(modifier = list(selected = TRUE))
+                        )
+                      )
+                    )) 
+  })
+  
   
   # filter only skeletons and study skins for simplified figures
   data_filt <- reactive({

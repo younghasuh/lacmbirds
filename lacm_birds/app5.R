@@ -10,6 +10,7 @@ library(ggiraph)
 library(htmltools)
 library(plotly)
 library(shinydashboard)
+library(DT)
 
 setwd("~/lacmbirds/lacm_birds")
 
@@ -39,6 +40,8 @@ ind <- c("sex", "spp", "state", "month")
 ui <- shinyUI(
   
   fluidPage(
+    rclipboardSetup(),
+    
     titlePanel(title =  div(img(src="NHM_logo_black_250.png", width="50px", height="50px"), 
                           "LACM Collection Information"), windowTitle = "LACM Collection Information"),
     
@@ -84,9 +87,12 @@ ui <- shinyUI(
                         tabPanel(title = "Data explorationg with Plotly",
                                  fluidRow(column(12, h4("Plotly boxplots"), 
                                                  box(selectInput("xaxis", "Select independent variable (x-axis)",
-                                                                 choices = ind)),
-                                                 box(plotlyOutput("plot"))))
-                        )
+                                                                 choices = ind)))),
+                                 fluidRow(column(12, plotlyOutput("plot")))
+                                ),
+                        tabPanel(title = "Table of all specimens",
+                                 fluidRow(column(12, h4("List of all specimens. Use shift or ctrl to select multiple rows for copying onto clipboard."),
+                                                 DTOutput("spectab"))))
             )
           ) # mainpanel end
         ) # sidebar layout end
@@ -109,6 +115,8 @@ ui <- shinyUI(
 
 server <- shinyServer(function(input, output, session) {
   
+
+  
   ### TAB 1
   # using selectize input; putting autofill list on server side to reduce processing speed
   updateSelectizeInput(session, "sp", choices = alist, selected=character(0), server = TRUE)
@@ -122,7 +130,43 @@ server <- shinyServer(function(input, output, session) {
     selected() %>% count(Description)
   )
   
+  # table for list
+  output$spectab <- renderDT({
+    dat <- selected() %>% 
+      mutate(
+        LACM = lacm,
+        LAF = laf,
+        Family = family,
+        Species = species,
+        Subspecies = spp,
+        Sex = sex,
+        Date = datecoll,
+        Locality = locality
+      ) %>% 
+      select(LACM, LAF, Family, Species, Subspecies, Sex, Date, Description, Locality)
+    
+    DT::datatable(dat,
+                  class = 'cell-border stripe',
+                  rownames = F,
+                  extensions = c("Buttons", "Select"),
+                  selection = 'none',
+                  options = 
+                    list(
+                      pageLength = 10, autoWidth = TRUE,
+                      dom = 'Bfrtip',
+                      select = TRUE,
+                      buttons = list(
+                        list(
+                          extend = "copy",
+                          text = 'Copy'#,
+                          #exportOptions = list(modifier = list(selected = TRUE))
+                        )
+                      )
+                    ))
+  })
   
+  
+
   # filter only skeletons and study skins for simplified figures
   data_filt <- reactive({
     selected() %>% 
