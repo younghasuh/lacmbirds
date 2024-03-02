@@ -11,36 +11,25 @@ library(htmltools)
 library(plotly)
 library(shinydashboard)
 library(DT)
+library(rclipboard)
 
 setwd("~/lacmbirds/lacm_birds")
 
 shinyApp(ui = ui, server = server)
 
-data <- read.csv("data_20240222.csv")
+data <- read.csv("data_20240301.csv")
 alist <- sort(unique(unlist(data$species, use.names = FALSE)))
 ind <- c("sex", "spp", "state", "month")
 
-# data$nat <- ifelse(data$specnat == "AL" | 
-#                      data$specnat == "AC" | 
-#                      data$specnat == "AO", "fluid", 
-#                    ifelse(data$specnat == "SS" | 
-#                             data$specnat == "SW" | 
-#                             data$specnat == "SA" | 
-#                             data$specnat == "KB", "study skin",
-#                           ifelse(data$specnat == "SN" | 
-#                                    data$specnat == "SNB" | 
-#                                    data$specnat == "SNW" | 
-#                                    data$specnat == "SO", "skeleton",
-#                                  "other")))
 
-#write.csv(data, "data_20240222.csv")
-
+# notes
+# for data, 9 have sex as lowercase m/f
+# 
 
 
 ui <- shinyUI(
   
   fluidPage(
-    rclipboardSetup(),
     
     titlePanel(title =  div(img(src="NHM_logo_black_250.png", width="50px", height="50px"), 
                           "LACM Collection Information"), windowTitle = "LACM Collection Information"),
@@ -48,7 +37,7 @@ ui <- shinyUI(
     tabsetPanel(
       type = "tabs",
       
-      # tab 1 ---
+      # tab 1 ----
       tabPanel(
         titlePanel("Species summary"),
         
@@ -69,7 +58,10 @@ ui <- shinyUI(
           mainPanel(
             
             tabsetPanel(type = "tabs",
-                        tabPanel(title = "Summary", h4("Specimen count by specimen type/nature"), tableOutput("specnat")),
+                        tabPanel(title = "Summary", 
+                                 fluidRow(column(12, h4("Specimen count by specimen type/nature"), tableOutput("specnat"))),
+                                 fluidRow(column(6, h4("By sex", tableOutput("sexcount"))),
+                                          column(6, h4("By age", tableOutput("agecount"))))),
                         
                         tabPanel(title = "Count figures", 
                                  fluidRow(column(12, h4("Specimen count by year"), plotOutput("trend"))),
@@ -98,13 +90,27 @@ ui <- shinyUI(
         ) # sidebar layout end
       ), # tabPanel end
       
+      # tab 2 ----
       # start new tabPanel --
       tabPanel(
         titlePanel("LACM lookup"),
         textInput("catalog", "LACM"),
         fluidRow(column(12, tableOutput("catcount"))),
         fluidRow(column(12, h4("Leaftlet map"), leafletOutput(outputId = 'catmap')))
+      ),
+      
+      
+      # tab 3 ----
+      tabPanel(
+        titlePanel("Explore the collection"),
+        fluidRow(h4("Last updated 24 Oct 2023")),
+        fluidRow(column(4, h4("Total number of specimens"), tableOutput("lacmsumm")),
+                 column(8, h4("Total sexed specimens"), tableOutput("sexsumm"))),
+        fluidRow(column(12, selectInput("category", "Select category:",
+                                        choices = c("Description", "sex", "family", "genus", "species", "year", "country")))),
+        fluidRow(column(12, tableOutput("toptable")))
       )
+      
     )
   )
 )
@@ -117,7 +123,7 @@ server <- shinyServer(function(input, output, session) {
   
 
   
-  ### TAB 1
+  ### TAB 1 ----
   # using selectize input; putting autofill list on server side to reduce processing speed
   updateSelectizeInput(session, "sp", choices = alist, selected=character(0), server = TRUE)
   
@@ -128,6 +134,16 @@ server <- shinyServer(function(input, output, session) {
   # table for specimen nature 
   output$specnat <- renderTable(
     selected() %>% count(Description)
+  )
+  
+  # table for sex
+  output$sexcount <- renderTable(
+    selected() %>% count(Sex)
+  )
+  
+  # table for age
+  output$agecount <- renderTable(
+    selected() %>% count(age)
   )
   
   # table for list
@@ -304,16 +320,22 @@ server <- shinyServer(function(input, output, session) {
     x <- selected()[[input$xaxis]]
   })
   
-  output$plot <- renderPlotly({
-    dat <- selected()
-    plot_ly(dat, x = x(), y = dat$wt, type = "box")  %>% 
-      layout(boxmode = "group", 
-             xaxis = list(title='Grouping'), 
-             yaxis = list(title='Weight (g)'))
-  })
   
+   output$plot <- renderPlotly({
+     dat <- selected()
+     plot_ly(dat, x = x(), y = dat$wt, type = "box",
+             boxpoints = "all", jitter = 0.8,
+             pointpos = 0, marker = list(size = 3),
+             hoverinfo = "text",
+             text = ~paste("LACM:", dat$lacm, ";", "Weight:", dat$wt, sep=" "))  %>%
+       layout(boxmode = "group",
+              xaxis = list(title='Grouping'),
+              yaxis = list(title='Weight (g)'))
+   })
   
-  #### TAB 2
+ 
+  
+  #### TAB 2 ----
   selected2 <- reactive(data %>% filter(lacm == input$catalog)) 
   
   output$catcount <- renderTable(
@@ -348,7 +370,27 @@ server <- shinyServer(function(input, output, session) {
     
   })
   
+  
+  #### TAB 3 ----
+  output$lacmsumm <- renderTable(
+    max(data$lacm),
+    rownames = F, colnames = F
+  )
+   
+  
+  output$sexsumm <- renderTable(
+    data %>% 
+      count(Sex)
+  ) 
+  
+  
+
 })
+
+#fluidRow(column(12, tableOutput("lacmsumm"))),
+#fluidRow(column(12, selectInput("category", "Select category:",
+#                                choices = c("Description", "sex", "family", "genus", "species", "year", "country")))),
+#fluidRow(column(12, plotlyOutput("toptable")))
 
 
 shinyApp(ui = ui, server = server)

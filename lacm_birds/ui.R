@@ -38,7 +38,10 @@ shinyUI(
           mainPanel(
             
             tabsetPanel(type = "tabs",
-                        tabPanel(title = "Summary", h4("Specimen count by specimen type/nature"), tableOutput("specnat")),
+                        tabPanel(title = "Summary", 
+                                 fluidRow(column(12, h4("Specimen count by specimen type/nature"), tableOutput("specnat"))),
+                                 fluidRow(column(3, tableOutput("sexcount")),
+                                          column(3, tableOutput("agecount")))),
                         
                         tabPanel(title = "Count data", 
                                  fluidRow(column(12, h4("Specimen count by year"), plotOutput("trend"))),

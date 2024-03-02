@@ -16,7 +16,7 @@ library(DT)
 
 
 # Load data
-data <- read.csv("data_20240222.csv")
+data <- read.csv("data_20240301.csv")
 alist <- sort(unique(unlist(data$species, use.names = FALSE)))
 ind <- c("sex", "spp", "state", "month")
 
@@ -34,6 +34,16 @@ shinyServer(function(input, output, session) {
   # table for specimen nature 
   output$specnat <- renderTable(
     selected() %>% count(Description)
+  )
+  
+  # table for sex
+  output$sexcount <- renderTable(
+    selected() %>% count(Sex)
+  )
+  
+  # table for age
+  output$agecount <- renderTable(
+    selected() %>% count(age)
   )
   
   # table for list
@@ -208,9 +218,14 @@ shinyServer(function(input, output, session) {
    x <- reactive({
      x <- selected()[[input$xaxis]]
    })
+   
    output$plot <- renderPlotly({
-   dat <- selected()
-   plot_ly(dat, x = x(), y = dat$wt, type = "box")  %>%
+     dat <- selected()
+     plot_ly(dat, x = x(), y = dat$wt, type = "box",
+             boxpoints = "all", jitter = 0.8,
+             pointpos = 0, marker = list(size = 3),
+             hoverinfo = "text",
+             text = ~paste("LACM:", dat$lacm, ";", "Weight:", dat$wt, sep=" "))  %>%
        layout(boxmode = "group",
               xaxis = list(title='Grouping'),
               yaxis = list(title='Weight (g)'))
