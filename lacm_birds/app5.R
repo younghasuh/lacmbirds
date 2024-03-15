@@ -104,8 +104,7 @@ ui <- shinyUI(
       tabPanel(
         titlePanel("Explore the collection"),
         fluidRow(h4("Last updated 24 Oct 2023")),
-        fluidRow(column(4, h4("Total number of specimens"), tableOutput("lacmsumm")),
-                 column(8, h4("Total sexed specimens"), tableOutput("sexsumm"))),
+        fluidRow(column(12, h4("Total number of specimens"), tableOutput("lacmsumm"))),
         fluidRow(column(12, selectInput("category", "Select category:",
                                         choices = c("Description", "sex", "family", "genus", "species", "year", "country")))),
         fluidRow(column(12, tableOutput("toptable")))
@@ -120,7 +119,6 @@ ui <- shinyUI(
             
 
 server <- shinyServer(function(input, output, session) {
-  
 
   
   ### TAB 1 ----
@@ -376,21 +374,15 @@ server <- shinyServer(function(input, output, session) {
     max(data$lacm),
     rownames = F, colnames = F
   )
-   
-  
-  output$sexsumm <- renderTable(
-    data %>% 
-      count(Sex)
-  ) 
-  
-  
 
+  
+  output$toptable <- renderTable(
+    data %>% 
+      count(get(input$category))
+  )
+  
 })
 
-#fluidRow(column(12, tableOutput("lacmsumm"))),
-#fluidRow(column(12, selectInput("category", "Select category:",
-#                                choices = c("Description", "sex", "family", "genus", "species", "year", "country")))),
-#fluidRow(column(12, plotlyOutput("toptable")))
 
 
 shinyApp(ui = ui, server = server)

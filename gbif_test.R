@@ -46,8 +46,10 @@ d2 <- d %>%
          decimalLatitude, decimalLongitude, coordinateUncertaintyInMeters, coordinatePrecision, 
          eventDate, day, month, year, institutionCode, catalogNumber) 
 
-d2$date <- as.Date(d2$eventDate, format="%Y-%B-%d")
+d2$date <- as.Date(d2$eventDate, format = "%Y-%m-%d")
+# selects 1st if multiple dates/ranges listed; cannot do missing y/m/d elements
 
+# also, don't have any measurement data! Where to get this ?????????
 
 
 
