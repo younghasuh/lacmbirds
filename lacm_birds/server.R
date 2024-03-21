@@ -55,7 +55,6 @@ shinyServer(function(input, output, session) {
         Family = family,
         Species = species,
         Subspecies = spp,
-        Sex = sex,
         Date = datecoll,
         Locality = locality
       ) %>% 
@@ -172,7 +171,7 @@ shinyServer(function(input, output, session) {
   # boxplot for weights
   output$wtPlot <- renderPlot({
     selected() %>% 
-      ggplot(aes(x=sex, y=wt)) +
+      ggplot(aes(x=Sex, y=wt)) +
       stat_boxplot(geom="errorbar", position="dodge2") +
       geom_boxplot(stat = "boxplot",
                    position = "dodge2") + 
@@ -193,7 +192,7 @@ shinyServer(function(input, output, session) {
   })
   
   output$wtPlot2 <- renderGirafe({
-    gg_bx <- ggplot(selected(), aes(x=sex, y=wt)) +
+    gg_bx <- ggplot(selected(), aes(x=Sex, y=wt)) +
       stat_boxplot(geom="errorbar", position="dodge2") +
       geom_boxplot(stat="boxplot", position="dodge2", outlier.shape = NA) +
       geom_point_interactive(aes(tooltip=lacm, data_id=lacm),
@@ -206,7 +205,7 @@ shinyServer(function(input, output, session) {
   output$datatab <- renderTable({
     #  selected_pts() 
     out <- selected()[selected()$lacm %in% selected_pts(),] %>% 
-      mutate(LACM = lacm, LAF = laf, Sex = sex, subspecies = spp, Date = datecoll, Locality = locality, SpecType = nat) %>% 
+      mutate(LACM = lacm, LAF = laf, subspecies = spp, Date = datecoll, Locality = locality, SpecType = nat) %>% 
       select(LACM, LAF, Sex, subspecies, Date, Locality, SpecType) 
     if( nrow(out) < 1 ) return(NULL)
     row.names(out) <- NULL
@@ -232,7 +231,7 @@ shinyServer(function(input, output, session) {
    })
   
   
-  #### TAB 2
+  #### TAB 2 ----
   selected2 <- reactive(data %>% filter(lacm == input$catalog)) 
   
   output$catcount <- renderTable(
@@ -243,7 +242,6 @@ shinyServer(function(input, output, session) {
         Family = family,
         Species = species,
         Subspecies = spp,
-        Sex = sex,
         Date = datecoll,
         Locality = locality
       ) %>% 
@@ -251,8 +249,6 @@ shinyServer(function(input, output, session) {
   )
   
   
-  
-  # using leaflet
   catmap_df <- reactive({
     selected2() %>% 
       filter(!is.na(lng) & !is.na(lat)) %>% 
@@ -266,5 +262,22 @@ shinyServer(function(input, output, session) {
                        popup=paste("LACM ", catmap_df()$lacm, "<br>", catmap_df()$datecoll, sep = " "))
     
   })
+  
+  
+  #### TAB 3 ----
+  output$lacmsumm <- renderTable(
+    max(data$lacm),
+    rownames = F, colnames = F
+  )
+  
+  output$toptable <- renderDT({
+    gettab <- data %>% count(get(input$category))
+    
+    DT::datatable(gettab,
+                  class = 'cell-border stripe',
+                  rownames = F,
+                  colnames = c("", "N"))
+  })
+  
   
 })

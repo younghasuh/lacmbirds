@@ -73,12 +73,23 @@ shinyUI(
         ) # sidebar layout end
       ), # tabPanel end
       
-      # start new tabPanel --
+      # tab 2 ----
       tabPanel(
         titlePanel("LACM lookup"),
         textInput("catalog", "LACM"),
         fluidRow(column(12, tableOutput("catcount"))),
         fluidRow(column(12, h4("Leaftlet map"), leafletOutput(outputId = 'catmap')))
+      ),
+      
+      
+      # tab 3 ----
+      tabPanel(
+        titlePanel("Explore the collection"),
+        fluidRow(h4("Last updated 24 Oct 2023")),
+        fluidRow(column(12, h4("Total number of specimens"), tableOutput("lacmsumm"))),
+        fluidRow(column(12, selectInput("category", "Select category:",
+                                        choices = c("Description", "Sex", "family", "genus", "year", "country")))),
+        fluidRow(column(12, DTOutput("toptable")))
       )
     )
   )

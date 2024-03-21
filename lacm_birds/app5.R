@@ -106,8 +106,9 @@ ui <- shinyUI(
         fluidRow(h4("Last updated 24 Oct 2023")),
         fluidRow(column(12, h4("Total number of specimens"), tableOutput("lacmsumm"))),
         fluidRow(column(12, selectInput("category", "Select category:",
-                                        choices = c("Description", "sex", "family", "genus", "species", "year", "country")))),
-        fluidRow(column(12, tableOutput("toptable")))
+                                        choices = c("Description", "Sex", "family", "genus", "year", "country")))),
+        #fluidRow(column(12, tableOutput("toptable"))),
+        fluidRow(column(12, DTOutput("toptable2")))
       )
       
     )
@@ -153,7 +154,6 @@ server <- shinyServer(function(input, output, session) {
         Family = family,
         Species = species,
         Subspecies = spp,
-        Sex = sex,
         Date = datecoll,
         Locality = locality
       ) %>% 
@@ -271,7 +271,7 @@ server <- shinyServer(function(input, output, session) {
   # boxplot for weights
   output$wtPlot <- renderPlot({
     selected() %>% 
-      ggplot(aes(x=sex, y=wt)) +
+      ggplot(aes(x=Sex, y=wt)) +
       stat_boxplot(geom="errorbar", position="dodge2") +
       geom_boxplot(stat = "boxplot",
                    position = "dodge2") + 
@@ -292,7 +292,7 @@ server <- shinyServer(function(input, output, session) {
   })
   
   output$wtPlot2 <- renderGirafe({
-    gg_bx <- ggplot(selected(), aes(x=sex, y=wt)) +
+    gg_bx <- ggplot(selected(), aes(x=Sex, y=wt)) +
       stat_boxplot(geom="errorbar", position="dodge2") +
       geom_boxplot(stat="boxplot", position="dodge2", outlier.shape = NA) +
       geom_point_interactive(aes(tooltip=lacm, data_id=lacm),
@@ -305,7 +305,7 @@ server <- shinyServer(function(input, output, session) {
   output$datatab <- renderTable({
     #  selected_pts() 
     out <- selected()[selected()$lacm %in% selected_pts(),] %>% 
-      mutate(LACM = lacm, LAF = laf, Sex = sex, subspecies = spp, Date = datecoll, Locality = locality, SpecType = nat) %>% 
+      mutate(LACM = lacm, LAF = laf, subspecies = spp, Date = datecoll, Locality = locality, SpecType = nat) %>% 
       select(LACM, LAF, Sex, subspecies, Date, Locality, SpecType) 
     if( nrow(out) < 1 ) return(NULL)
     row.names(out) <- NULL
@@ -344,7 +344,6 @@ server <- shinyServer(function(input, output, session) {
         Family = family,
         Species = species,
         Subspecies = spp,
-        Sex = sex,
         Date = datecoll,
         Locality = locality
       ) %>% 
@@ -381,7 +380,19 @@ server <- shinyServer(function(input, output, session) {
       count(get(input$category))
   )
   
+  output$toptable2 <- renderDT({
+    gettab <- data %>% count(get(input$category))
+                             
+    DT::datatable(gettab,
+                  class = 'cell-border stripe',
+                  rownames = F,
+                  colnames = c("", "N"))
+  })
+  
 })
+
+
+
 
 
 
