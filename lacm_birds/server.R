@@ -16,7 +16,7 @@ library(DT)
 
 
 # Load data
-data <- read.csv("data_20240301.csv")
+data <- read.csv("data_20240328.csv")
 alist <- sort(unique(unlist(data$species, use.names = FALSE)))
 ind <- c("sex", "spp", "state", "month")
 
@@ -52,13 +52,14 @@ shinyServer(function(input, output, session) {
       mutate(
         LACM = lacm,
         LAF = laf,
+        Order = order,
         Family = family,
         Species = species,
         Subspecies = spp,
         Date = datecoll,
         Locality = locality
       ) %>% 
-      select(LACM, LAF, Family, Species, Subspecies, Sex, Date, Description, Locality)
+      select(LACM, LAF, Order, Family, Species, Subspecies, Sex, Date, Description, Locality)
     
     DT::datatable(dat,
                   class = 'cell-border stripe',
@@ -239,13 +240,14 @@ shinyServer(function(input, output, session) {
       mutate(
         LACM = lacm,
         LAF = laf,
+        Order = order,
         Family = family,
         Species = species,
         Subspecies = spp,
         Date = datecoll,
         Locality = locality
       ) %>% 
-      select(LACM, LAF, Family, Species, Subspecies, Sex, Date, Description, Locality)
+      select(LACM, LAF, Order, Family, Species, Subspecies, Sex, Date, Description, Locality)
   )
   
   

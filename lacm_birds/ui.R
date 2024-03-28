@@ -88,7 +88,7 @@ shinyUI(
         fluidRow(h4("Last updated 24 Oct 2023")),
         fluidRow(column(12, h4("Total number of specimens"), tableOutput("lacmsumm"))),
         fluidRow(column(12, selectInput("category", "Select category:",
-                                        choices = c("Description", "Sex", "family", "genus", "year", "country")))),
+                                        choices = c("Description", "Sex", "order", "family", "genus", "year", "country")))),
         fluidRow(column(12, DTOutput("toptable")))
       )
     )

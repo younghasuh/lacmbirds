@@ -8,13 +8,13 @@ setwd("~/lacmbirds/lacm_birds")
 
 
 # load data sets
-data <- read.csv("birds_2023.csv")
+data0 <- read.csv("birds_2023.csv")
 specnat <- read.csv("specnat.csv")
 sta <- read.csv("states.csv")
 
 
-data2 <- data %>% 
-  select(Catalog.No, Field.No, Sex, LAF.No, Age, Spec.Nat, Measurements, Gonads, Weight, Collector, Date.Coll, Family, Genus, Species, Subspecies, Continent, Country, State, County, Township, Nearest.Named.Place,
+data2 <- data0 %>% 
+  select(Catalog.No, Field.No, Sex, LAF.No, Age, Spec.Nat, Measurements, Gonads, Weight, Collector, Date.Coll, Order, Family, Genus, Species, Subspecies, Continent, Country, State, County, Township, Nearest.Named.Place,
          Elevation, Latitude.Dec, Longitude.Dec) %>% 
   mutate(lacm = Catalog.No,
          field = Field.No,
@@ -31,6 +31,7 @@ data2 <- data %>%
          spp = Subspecies,
          genus = Genus,
          family = Family,
+         order = Order,
          locality = paste(Country, State, County, Township, Nearest.Named.Place, sep = " "),
          state = State,
          county = County,
@@ -39,7 +40,7 @@ data2 <- data %>%
          lat = Latitude.Dec,
          lng = Longitude.Dec
   ) %>% 
-  select(lacm, field, sex, laf, age, specnat, measure, gonads, wt, coll, datecoll, family, species, genus, spp, locality, country, state, county, ele, lat, lng)
+  select(lacm, field, sex, laf, age, specnat, measure, gonads, wt, coll, datecoll, order, family, species, genus, spp, locality, country, state, county, ele, lat, lng)
 
 
 
@@ -95,7 +96,7 @@ data <- data %>%
   mutate(age = sub("^$", "Unassigned", age))
 
 
-write.csv(data, "data_20240301.csv")
+write.csv(data, "data_20240328.csv")
 
 
 
