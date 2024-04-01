@@ -17,9 +17,12 @@ setwd("~/lacmbirds/lacm_birds")
 
 shinyApp(ui = ui, server = server)
 
+
 data <- read.csv("data_20240301.csv")
 alist <- sort(unique(unlist(data$species, use.names = FALSE)))
 ind <- c("sex", "spp", "state", "month")
+
+datf <- data %>% filter(year < 2020)
 
 
 # notes
@@ -106,7 +109,7 @@ ui <- shinyUI(
         fluidRow(h4("Last updated 24 Oct 2023")),
         fluidRow(column(12, h4("Total number of specimens"), tableOutput("lacmsumm"))),
         fluidRow(column(12, selectInput("category", "Select category:",
-                                        choices = c("Description", "Sex", "family", "genus", "year", "country")))),
+                                        choices = c("Description", "Sex", "order", "family", "genus", "year", "country")))),
         #fluidRow(column(12, tableOutput("toptable"))),
         fluidRow(column(12, DTOutput("toptable2")))
       )

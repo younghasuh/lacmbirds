@@ -96,6 +96,34 @@ data <- data %>%
   mutate(age = sub("^$", "Unassigned", age))
 
 
+
+data <- data %>%
+  mutate(ethanol=case_when(specnat == "AL" ~ "complete fluid",
+                             specnat == "FA" ~ "complete fluid",
+                             specnat == "AC" ~ "partial fluid",
+                             specnat == "AO" ~ "partial fluid",
+                             specnat == "SA" ~ "partial fluid"),
+         skeleton=case_when(specnat == "SN" ~ "complete skeleton",
+                            specnat == "FB" ~ "complete skeleton",
+                            specnat == "PS" ~ "partial skeleton",
+                            specnat == "SO" ~ "partial skeleton",
+                            specnat == "SB" ~ "partial skeleton",
+                            specnat == "KB" ~ "partial skeleton",
+                            specnat == "MS" ~ "partial skeleton",
+                            specnat == "SK" ~ "partial skeleton"),
+         skin=case_when(specnat == "SS" ~ "study skin",
+                        specnat == "KB" ~ "study skin",
+                        specnat == "SB" ~ "study skin",
+                        specnat == "SA" ~ "study skin",
+                        specnat == "FB" ~ "flat skin",
+                        specnat == "FS" ~ "flat skin",
+                        specnat == "FA" ~ "flat skin",
+                        specnat == "WO" ~ "flat skin"),
+         mount=case_when(specnat == "BM" ~ "mount",
+                              specnat == "MS" ~ "mount"))
+
+
+# Write
 write.csv(data, "data_20240328.csv")
 
 
