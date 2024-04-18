@@ -126,6 +126,6 @@ data <- data %>%
 # Write
 write.csv(data, "data_20240328.csv")
 
-
+data <- read.csv("data_20240328.csv")
 
 check <- data %>% filter(year < 1800)
