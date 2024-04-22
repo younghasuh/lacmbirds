@@ -14,9 +14,13 @@ library(DT)
 library(rclipboard)
 
 setwd("C:/Users/young/Documents/lacmbirds/lacm_birds")
-md <- read.csv("merged_data.csv")
 
-md <- md %>% filter(wt < 90)
+here::i_am("lacm_birds/app_joint.R")
+
+md <- read.csv("merged_data.csv")
+md <- fullda
+
+#md <- md %>% filter(wt < 90)
 
 alist <- sort(unique(unlist(md$species, use.names = FALSE)))
 
