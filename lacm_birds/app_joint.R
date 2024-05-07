@@ -152,16 +152,26 @@ server <- shinyServer(function(input, output, session) {
   ### sub tab 2. Count figures ----
   
   # filter only skeletons and study skins for simplified figures
-  data_filt <- reactive({
+  data_filt_yr <- reactive({
     selected() %>% 
-      filter(!is.na(skin))
+      count(decade, skin, skeleton) %>% 
+      pivot_longer(cols=c(skin, skeleton), names_to = "nat", values_to = "count") %>% na.omit()
   })
   
+  # mdl <- md %>% 
+  #   count(year, skin, skeleton) 
+  # 
+  # mdl2 <- mdl %>% 
+  #   pivot_longer(cols=c(skin, skeleton), names_to = "nat", values_to = "count") %>% na.omit()
+  #   
+  # ggplot(mdl2, aes(x = year, y = n, fill = nat)) + 
+  #   geom_bar(stat = "identity",position = "dodge") +
+  #   xlim(1850, 2023)
   
   output$trend <- renderPlot({
-    data_filt() %>% 
-      ggplot(aes(x = year, fill = nat, color = nat)) +
-      geom_bar(position = position_dodge(preserve = "single")) +
+    data_filt_yr() %>% 
+      ggplot(aes(x = decade, y = n, fill = nat)) +
+      geom_bar(stat = "identity", position = position_dodge(preserve = "single")) +
       scale_x_continuous(breaks = seq(1880, 2020, 10)) +
       xlim(1850, 2023) +
       theme_classic() +
@@ -169,9 +179,17 @@ server <- shinyServer(function(input, output, session) {
     
   }, res = 96)
   
+  
+  
   # count by month and type
+  data_filt_mo <- reactive({
+    selected() %>% 
+      count(month, skin, skeleton) %>% 
+      pivot_longer(cols=c(skin, skeleton), names_to = "nat", values_to = "count") %>% na.omit()
+  })
+  
   output$trend2 <- renderPlot({
-    data_filt() %>% 
+    data_filt_mo() %>% 
       ggplot(aes(x = month, fill = nat, color = nat)) +
       geom_bar(position = position_dodge(preserve = "single")) +
       scale_x_continuous(breaks = seq(1, 12, 1), labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")) +
@@ -199,14 +217,14 @@ server <- shinyServer(function(input, output, session) {
       scale_fill_viridis_c(option = "D")  
   })
   
+  
   # reactive map by county (US only)
   spat_county <- reactive({
-    left_join(get_urbn_map(map = "counties", sf = TRUE) %>% 
-              selected() %>% 
+    left_join(get_urbn_map(map = "counties", sf = TRUE),
+              selected() %>%
                 count(county),
-              by=c("county_name"="county")) 
+              by = c("county_name" = "county"))
   })
-  
   
   output$county <- renderPlot({
     spat_county() %>% 
