@@ -18,12 +18,12 @@ setwd("C:/Users/young/Documents/lacmbirds/lacm_birds")
 here::i_am("lacm_birds/app_joint.R")
 
 md <- read.csv("merged_data.csv")
-md <- fullda
+md <- fullda2
 
 #md <- md %>% filter(wt < 90)
 
 alist <- sort(unique(unlist(md$species, use.names = FALSE)))
-
+ind <- c("Sex", "spp", "state", "month")
 
 ui <- shinyUI(
   
