@@ -280,8 +280,13 @@ write.csv(fullda2, "merged_data.csv")
 fullda <- read.csv("merged_data.csv")
 
 # remove weird outlier
- fullda2 <- fullda2 %>% 
+md3 <- md2 %>% 
    filter(wt < 1200)
+md2 <- md2 %>% filter(wt < 90)
+md2$country <- str_to_title(md2$country)
+table(md2$country)
+
+write.csv(md2, "merged_data2.csv")
 
 #####
 ## testing

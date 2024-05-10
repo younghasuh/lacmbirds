@@ -17,13 +17,14 @@ setwd("C:/Users/young/Documents/lacmbirds/lacm_birds")
 
 here::i_am("lacm_birds/app_joint.R")
 
-md <- read.csv("merged_data.csv")
-md <- fullda2
+md2 <- read.csv("merged_data2.csv")
+md2$date <- as.Date(md2$date)
 
-#md <- md %>% filter(wt < 90)
 
-alist <- sort(unique(unlist(md$species, use.names = FALSE)))
-ind <- c("Sex", "spp", "state", "month")
+# test <- md2[which(md2$species == "cumv/Eremophila alpestris"),]
+
+
+alist <- sort(unique(unlist(md2$species, use.names = FALSE)))
 
 ui <- shinyUI(
   
@@ -56,11 +57,11 @@ ui <- shinyUI(
           mainPanel(
             
             tabsetPanel(type = "tabs",
+                        # sub tab 1
                         tabPanel(title = "Summary", 
                                  fluidRow(column(12, h4("Specimen count by specimen type/nature"), tableOutput("specnat"))),
                                  fluidRow(column(6, h4("By sex", tableOutput("sexcount"))))),
-                        
-                        # needs love 
+                        # sub tab 2
                         tabPanel(title = "Count figures", 
                                  fluidRow(column(12, h4("Specimen count by year"), plotOutput("trend"))),
                                  fluidRow(column(12, h4("Specimen count by month"), plotOutput("trend2"))),
@@ -68,18 +69,14 @@ ui <- shinyUI(
                                  fluidRow(column(12, h4("Specimen count by county"), plotOutput("county"))),
                                  fluidRow(column(12, h4("Global specimen distribution"), leafletOutput(outputId = 'map')))
                         ),
-                        
-                        # tabPanel(title = "Weights by sex",
-                        #          fluidRow(column(8, h4("Weights by sex - interactive"), girafeOutput("wtPlot2")),
-                        #                   column(4, h4("Hovering points"), verbatimTextOutput("console"),
-                        #                          h4("Selected points"), tableOutput("datatab")))
-                        #),
+                        # sub tab 3
                         tabPanel(title = "Data explorationg with Plotly",
                                  fluidRow(column(12, h4("Plotly boxplots"), 
                                                  box(selectInput("xaxis", "Select independent variable (x-axis)",
-                                                                 choices = ind)))),
+                                                                 choices = c("Sex", "state", "month"))))),
                                  fluidRow(column(12, plotlyOutput("plot")))
                         ),
+                        # sub tab 4
                         tabPanel(title = "Table of all specimens",
                                  fluidRow(column(12, h4("List of all specimens. Use shift or ctrl to select multiple rows for copying onto clipboard."),
                                                  DTOutput("spectab"))))
@@ -93,8 +90,8 @@ ui <- shinyUI(
       tabPanel(
         titlePanel("Catalog lookup"),
         selectInput(inputId = "collx", label = "Collection", choices = c("LACM", "CUMV")),
-        textInput("catalog", "Catalog number:"),
-        fluidRow(column(12, tableOutput("catcount"))),
+        textInput("catnum", "Catalog number:"),
+        fluidRow(column(12, h5("Examples: use CUMV - 10078, LACM - 121077"), tableOutput("catcount"))),
         fluidRow(column(12, h4("Leaftlet map"), leafletOutput(outputId = 'catmap')))
       ),
       
@@ -109,12 +106,12 @@ ui <- shinyUI(
       # tab 4 ----
       tabPanel(
         titlePanel("Explore the collection"),
-        fluidRow(h4("Last updated 24 Oct 2023")),
+        fluidRow(h4("Last updated XX XXX XXXX")),
         fluidRow(column(12, h4("Total number of specimens"), tableOutput("summ"))),
         fluidRow(column(12, selectInput("category", "Select category:",
-                                        choices = c("description", "Sex", "family", "genus", "year", "country")))),
+                                        choices = c("Sex", "family", "genus", "year", "country", "state", "county")))),
         fluidRow(column(12, tableOutput("toptable"))),
-        fluidRow(column(12, DTOutput("toptable2")))
+        fluidRow(column(12, tableOutput("toptable2")))
       )
       
     )
@@ -132,7 +129,7 @@ server <- shinyServer(function(input, output, session) {
   updateSelectizeInput(session, "sp", choices = alist, selected=character(0), server = TRUE)
   
   # reactive input for species for tab 1
-  selected <- reactive(md %>% filter(species == req(input$sp)))
+  selected <- reactive(md2 %>% filter(species == req(input$sp)))
   
   ### sub tab 1. Summary ----
   # table for specimen nature 
@@ -221,8 +218,7 @@ server <- shinyServer(function(input, output, session) {
   # reactive map by county (US only)
   spat_county <- reactive({
     left_join(get_urbn_map(map = "counties", sf = TRUE),
-              selected() %>%
-                count(county),
+              selected() %>% count(county),
               by = c("county_name" = "county"))
   })
   
@@ -254,19 +250,6 @@ server <- shinyServer(function(input, output, session) {
   
   ### sub tab 3. Explore data with plotly ---- 
   
-  # # boxplot for weights
-  # output$wtPlot <- renderPlot({
-  #   selected() %>% 
-  #     ggplot(aes(x=Sex, y=wt)) +
-  #     stat_boxplot(geom="errorbar", position="dodge2") +
-  #     geom_boxplot(stat = "boxplot",
-  #                  position = "dodge2") + 
-  #     geom_point(shape=16, alpha=0.4, position=position_jitter(0.2)) +
-  #     theme_minimal() +
-  #     scale_x_discrete(limits = c("M", "F", "U"), labels = c("Male", "Female", "Unknown")) +
-  #     labs(x = "Sex", y = "Weight (g)")
-  # })
-
   x <- reactive({
     x <- selected()[[input$xaxis]]
   })
@@ -287,25 +270,24 @@ server <- shinyServer(function(input, output, session) {
   ### sub tab 4. table of all specimens ---- 
   
   # table for list
-  output$spectab <- renderDT({
+  output$spectab <- DT::renderDT({
     dat <- selected() %>% 
       mutate(
         Catalog = catalog,
         Family = family,
         Species = species,
-        #Subspecies = spp,
         Date = date,
         Locality = locality,
         Collection = collection
       ) %>% 
-      select(Collection, Catalog, Family, Species, Sex, Date, Description, Locality)
+      select(Collection, Catalog, Family, Species, Sex, Date, Locality)
     
     DT::datatable(dat,
                   class = 'cell-border stripe',
                   rownames = F,
                   extensions = c("Buttons", "Select"),
                   selection = 'none',
-                  options = 
+                  options =
                     list(
                       pageLength = 10, autoWidth = TRUE,
                       dom = 'Bfrtip',
@@ -313,37 +295,39 @@ server <- shinyServer(function(input, output, session) {
                       buttons = list(
                         list(
                           extend = "copy",
-                          text = 'Copy'#,
-                          #exportOptions = list(modifier = list(selected = TRUE))
+                          text = 'Copy'
                         )
                       )
                     ))
   })
+
   
   
-  
-  #### TAB 2 ---- edited but not tested b/c missing cumv lat/lng
+  #### TAB 2 ---- 
   # add a drop down to select collection then search by catalog #
-  selected0 <- reactive(md %>% filter(collx == input$collection))
-  selected2 <- reactive(selected0() %>% filter(lacm == input$catalog)) 
+  selected_cat <- reactive({
+    req(input$collx)
+    req(input$catnum)
+    md2 %>% 
+      dplyr::filter(collection %in% input$collx & catalog %in% input$catnum)
+  })
   
   output$catcount <- renderTable(
-    selected2() %>% 
+    selected_cat() %>% 
       mutate(
         Catalog = catalog,
         Family = family,
         Species = species,
-        Subspecies = spp,
-        Date = datecoll,
+        Date = as.character(date),
         Locality = locality
       ) %>% 
-      select(Catalog, Family, Species, Subspecies, Sex, Date, Description, Locality)
+      select(Catalog, Family, Species, Sex, Date, Locality)
   )
   
   
   # using leaflet
   catmap_df <- reactive({
-    selected2() %>% 
+    selected_cat() %>% 
       filter(!is.na(lng) & !is.na(lat)) %>% 
       st_as_sf(coords = c("lng", "lat"))
   })
@@ -352,7 +336,7 @@ server <- shinyServer(function(input, output, session) {
     leaflet() %>%
       addTiles() %>%
       addCircleMarkers(data = catmap_df(), radius=1, 
-                       popup=paste(catmap_df()$name, "<br>", catmap_df()$datecoll, sep = " "))
+                       popup=paste(catmap_df()$name, "<br>", "Date:", as.character(catmap_df()$date)))
     
   })
   
@@ -361,8 +345,8 @@ server <- shinyServer(function(input, output, session) {
   updateSelectizeInput(session, "sp1", choices = alist, selected=character(0), server = TRUE)
   updateSelectizeInput(session, "sp2", choices = alist, selected=character(0), server = TRUE)
   
-  selected3 <- reactive(md %>% filter(species == req(input$sp1)))
-  selected4 <- reactive(md %>% filter(species == req(input$sp2)))
+  selected3 <- reactive(md2 %>% filter(species == req(input$sp1)))
+  selected4 <- reactive(md2 %>% filter(species == req(input$sp2)))
   
   output$plot_spcomp <- renderPlotly({
     dat3 <- selected3()
@@ -378,25 +362,36 @@ server <- shinyServer(function(input, output, session) {
   
   
   #### TAB 4 ---- not edited yet
+  
+  # tabPanel(
+  #   titlePanel("Explore the collection"),
+  #   fluidRow(h4("Last updated XX XXX XXXX")),
+  #   fluidRow(column(12, h4("Total number of specimens"), tableOutput("summ"))),
+  #   fluidRow(column(12, selectInput("category", "Select category:",
+  #                                   choices = c("Sex", "family", "genus", "year", "country", "state", "county")))),
+  #   fluidRow(column(12, tableOutput("toptable"))),
+  #   fluidRow(column(12, DTOutput("toptable2")))
+  # )
+  
   output$summ <- renderTable(
-    max(data$lacm),
+    md2 %>% 
+      group_by(collection) %>% 
+      summarise(N = n()),
     rownames = F, colnames = F
   )
   
   
   output$toptable <- renderTable(
-    data %>% 
+    md2 %>% 
+      group_by(collection) %>% 
       count(get(input$category))
   )
   
-  output$toptable2 <- renderDT({
-    gettab <- data %>% count(get(input$category))
-    
-    DT::datatable(gettab,
-                  class = 'cell-border stripe',
-                  rownames = F,
-                  colnames = c("", "N"))
-  })
+  output$toptable2 <- renderTable(
+    md2 %>% 
+      group_by(get(input$category)) %>% 
+      count(collection)
+  )
   
 })
 
