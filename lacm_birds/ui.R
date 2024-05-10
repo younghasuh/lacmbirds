@@ -13,6 +13,7 @@ shinyUI(
   fluidPage(
     titlePanel(title =  div(img(src="NHM_logo_black_250.png", width="50px", height="50px"), 
                             "LACM Collection Information"), windowTitle = "LACM Collection Information"),
+    p("Updated Oct 2023"),
     
     tabsetPanel(
       type = "tabs",
